@@ -1,0 +1,3279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="FlexMoney" />
+  <meta name="theme-color" content="#F5F6F8" />
+  <title>FlexMoney • Quản lý chi tiêu</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg: #F5F6F8;
+      --surface: #FFFFFF;
+      --surface-soft: #F1F3F6;
+      --ink: #111315;
+      --ink-2: #5E6470;
+      --ink-3: #9BA1AD;
+      --border: rgba(17, 19, 21, 0.07);
+      --lime: #C7F238;
+      --lime-deep: #AEE216;
+      --lime-soft: #EFFAD0;
+      --lime-text: #3A5200;
+      --danger: #DC2626;
+      --danger-soft: #FEE2E2;
+      --warn: #D97706;
+      --warn-soft: #FEF3C7;
+      --success: #15803D;
+      --success-soft: #DCFCE7;
+      --shadow-sm: 0 2px 10px rgba(17, 19, 21, 0.035);
+      --shadow-md: 0 10px 30px rgba(17, 19, 21, 0.08);
+      --radius-card: 24px;
+      --radius-inner: 16px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .app-shell {
+      max-width: 440px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background: var(--bg);
+      position: relative;
+      padding-bottom: calc(88px + var(--safe-bottom));
+    }
+
+    @media (min-width: 520px) {
+      body {
+        background: #EAECEF;
+        padding: 16px 0;
+      }
+      .app-shell {
+        min-height: calc(100dvh - 32px);
+        border-radius: 36px;
+        box-shadow: 0 24px 64px rgba(17, 19, 21, 0.12);
+        overflow-x: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+      }
+    }
+
+    /* Header */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(245, 246, 248, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .brand-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-2);
+    }
+
+    .month-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.94);
+    }
+
+    .icon-btn.spinning svg {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Sections */
+    .view {
+      display: none;
+      padding: 4px 16px 20px;
+      animation: fadeUp 0.2s ease;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    /* Hero Balance */
+    .balance-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .balance-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      gap: 12px;
+    }
+
+    .balance-value {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .eye-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface-soft);
+      color: var(--ink-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .balance-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      margin-bottom: 16px;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface-soft);
+      color: var(--ink-2);
+    }
+
+    .pill-badge.lime {
+      background: var(--lime-soft);
+      color: var(--lime-text);
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      border-radius: 999px;
+      border: none;
+      background: var(--ink);
+      color: #FFFFFF;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.14s ease, opacity 0.14s ease;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.985);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      height: 46px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    /* Wallet Cards (Neobank reference style) */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 6px 2px 10px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      color: var(--ink);
+    }
+
+    .section-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .wallets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .wallet-card {
+      border-radius: 22px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .wallet-card:active {
+      transform: scale(0.98);
+    }
+
+    .wallet-card.lime {
+      background: linear-gradient(140deg, #D5FA4A 0%, #BEEF28 60%, #A9DE16 100%);
+      color: var(--ink);
+      border: 1px solid rgba(17, 19, 21, 0.08);
+    }
+
+    .wallet-card.dark {
+      background: linear-gradient(145deg, #21252B 0%, #111315 100%);
+      color: #FFFFFF;
+    }
+
+    .wallet-card::after {
+      content: "";
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      right: -28px;
+      top: -28px;
+      background: rgba(255, 255, 255, 0.22);
+      pointer-events: none;
+    }
+
+    .wallet-card.dark::after {
+      background: rgba(199, 242, 56, 0.12);
+    }
+
+    .wallet-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wallet-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(17, 19, 21, 0.1);
+    }
+
+    .wallet-card.dark .wallet-icon {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--lime);
+    }
+
+    .wallet-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.65);
+      color: var(--ink);
+    }
+
+    .wallet-card.dark .wallet-tag {
+      background: rgba(255, 255, 255, 0.12);
+      color: #E5E7EB;
+    }
+
+    .wallet-bottom {
+      position: relative;
+      z-index: 1;
+    }
+
+    .wallet-name {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.78;
+      margin-bottom: 2px;
+    }
+
+    .wallet-amount {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .wallet-sub {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.72;
+      margin-top: 3px;
+    }
+
+    /* Day Strip / Date Navigator */
+    .day-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .day-stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface-soft);
+      padding: 3px;
+      border-radius: 999px;
+    }
+
+    .day-step-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      flex-shrink: 0;
+    }
+
+    .day-label-pill {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+      padding: 0 6px;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .slot-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--ink-2);
+      white-space: nowrap;
+    }
+
+    .slot-pill.expanded {
+      background: var(--lime-soft);
+      color: var(--lime-text);
+    }
+
+    /* Transaction List */
+    .tx-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s ease;
+      border-radius: 12px;
+    }
+
+    .tx-item:last-child {
+      border-bottom: none;
+    }
+
+    .tx-item:active {
+      background: var(--surface-soft);
+    }
+
+    .tx-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--surface-soft);
+      color: var(--ink);
+    }
+
+    .tx-icon-box.income {
+      background: var(--lime-soft);
+      color: var(--lime-text);
+    }
+
+    .tx-icon-box.transfer {
+      background: #EEF2FF;
+      color: #3730A3;
+    }
+
+    .tx-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tx-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-meta {
+      font-size: 12px;
+      color: var(--ink-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .tx-amount {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .tx-amount.income {
+      color: var(--success);
+    }
+
+    .tx-method-chip {
+      display: inline-block;
+      margin-top: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--ink-2);
+    }
+
+    .tx-method-chip.lime {
+      background: var(--lime-soft);
+      color: var(--lime-text);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--ink-2);
+    }
+
+    .empty-state-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 10px;
+      border-radius: 16px;
+      background: var(--surface-soft);
+      color: var(--ink-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Search & Filter */
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0 14px;
+      height: 46px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .filter-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-2);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .filter-chip.active {
+      background: var(--ink);
+      color: #FFFFFF;
+      border-color: var(--ink);
+    }
+
+    .day-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 12px 4px 6px;
+    }
+
+    /* Analytics */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-tile-label {
+      font-size: 12px;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+
+    .stat-tile-val {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--ink);
+    }
+
+    .cat-bar-row {
+      margin-bottom: 14px;
+    }
+
+    .cat-bar-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .cat-bar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .cat-bar-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .cat-bar-track {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      overflow: hidden;
+    }
+
+    .cat-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--ink);
+      transition: width 0.35s ease;
+    }
+
+    .cat-bar-fill.top {
+      background: linear-gradient(90deg, var(--lime-deep), var(--lime));
+    }
+
+    /* Settings (Screen 3 reference style) */
+    .settings-group-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-2);
+      margin: 14px 4px 8px;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .settings-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .settings-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .settings-sub {
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 440px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 8px 10px calc(8px + var(--safe-bottom));
+      z-index: 30;
+    }
+
+    @media (min-width: 520px) {
+      .bottom-nav {
+        bottom: 16px;
+        border-radius: 0 0 36px 36px;
+      }
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      font-family: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 4px;
+      color: var(--ink-3);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease;
+    }
+
+    .nav-btn.active {
+      color: var(--ink);
+    }
+
+    .nav-btn.active::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 24px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--lime-deep);
+    }
+
+    /* Modal / Bottom Sheet (Screen 2 reference style) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 19, 21, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 60;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      max-width: 440px;
+      max-height: 92dvh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-radius: 28px 28px 0 0;
+      padding: 12px 20px calc(22px + var(--safe-bottom));
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: #E2E5EB;
+      margin: 0 auto 14px;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .sheet-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Quick NLP bar */
+    .quick-parse-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--lime-soft);
+      border: 1px solid rgba(174, 226, 22, 0.45);
+      border-radius: 14px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+    }
+
+    .quick-parse-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .quick-parse-box input::placeholder {
+      color: #5B6E24;
+    }
+
+    /* Form fields */
+    .field-group {
+      margin-bottom: 11px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+      margin-bottom: 5px;
+    }
+
+    .amount-input-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--surface-soft);
+      border-radius: 16px;
+      padding: 10px 14px;
+      border: 1.5px solid transparent;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .amount-input-wrap:focus-within {
+      background: var(--surface);
+      border-color: var(--ink);
+    }
+
+    .amount-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: inherit;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .currency-suffix {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink-2);
+      margin-left: 8px;
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      margin-top: 7px;
+      scrollbar-width: none;
+    }
+
+    .preset-row::-webkit-scrollbar { display: none; }
+
+    .preset-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .preset-btn.accent {
+      background: var(--lime-soft);
+      border-color: rgba(174, 226, 22, 0.5);
+      color: var(--lime-text);
+    }
+
+    .text-input {
+      width: 100%;
+      height: 42px;
+      border-radius: 14px;
+      border: 1.5px solid transparent;
+      background: var(--surface-soft);
+      padding: 0 14px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .text-input:focus {
+      background: var(--surface);
+      border-color: var(--ink);
+    }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .cat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 9px;
+      border-radius: 13px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .cat-chip.selected {
+      background: var(--ink);
+      color: #FFFFFF;
+      border-color: var(--ink);
+    }
+
+    .method-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .method-card {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 11px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .method-card.selected {
+      border-color: var(--ink);
+      background: var(--lime-soft);
+    }
+
+    .row-2col {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+    }
+
+    .sheet-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn-danger-soft {
+      height: 50px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: none;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--ink);
+      color: #FFFFFF;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-md);
+      z-index: 100;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 90vw;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    /* PIN Overlay */
+    .pin-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 90;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .pin-screen.open {
+      display: flex;
+    }
+
+    .pin-card {
+      width: 100%;
+      max-width: 340px;
+      background: var(--surface);
+      border-radius: 28px;
+      padding: 28px 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+
+    .pin-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--lime-soft);
+      color: var(--lime-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    /* Skeleton Loader & Budget / Chart Styles */
+    .budget-card {
+      background: var(--surface);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      cursor: pointer;
+    }
+
+    .budget-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .budget-status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--lime-soft);
+      color: var(--lime-text);
+      white-space: nowrap;
+    }
+
+    .budget-status-pill.warn {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .budget-status-pill.danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .budget-track {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      overflow: hidden;
+      margin-bottom: 7px;
+    }
+
+    .budget-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--ink);
+      transition: width 0.35s ease;
+    }
+
+    .budget-fill.warn {
+      background: var(--warn);
+    }
+
+    .budget-fill.danger {
+      background: var(--danger);
+    }
+
+    .budget-sub-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    /* Daily Bar Chart */
+    .chart-tabs {
+      display: inline-flex;
+      background: var(--surface-soft);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .chart-tab-btn {
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-2);
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .chart-tab-btn.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .chart-inspect-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-soft);
+      border-radius: 12px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+    }
+
+    .daily-chart-wrap {
+      position: relative;
+      height: 156px;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      padding: 14px 2px 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .daily-avg-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1.5px dashed rgba(17, 19, 21, 0.25);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .daily-avg-tag {
+      position: absolute;
+      right: 0;
+      top: -17px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--ink-2);
+      background: rgba(255,255,255,0.88);
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .day-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .day-bar {
+      width: 100%;
+      min-height: 3px;
+      border-radius: 4px 4px 1px 1px;
+      background: #D6DAE2;
+      transition: height 0.25s ease, background 0.15s ease;
+    }
+
+    .day-bar.has-val {
+      background: var(--ink);
+    }
+
+    .day-col.active .day-bar {
+      background: var(--lime-deep);
+      box-shadow: 0 0 0 2px rgba(174, 226, 22, 0.28);
+    }
+
+    .chart-xaxis {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--ink-3);
+      padding-top: 6px;
+    }
+
+    /* MoM Comparison */
+    .mom-row {
+      display: grid;
+      grid-template-columns: 92px 1fr 88px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 11px;
+      font-size: 12.5px;
+    }
+
+    .mom-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .mom-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mom-bar {
+      height: 7px;
+      border-radius: 999px;
+    }
+
+    .mom-bar.curr {
+      background: var(--ink);
+    }
+
+    .mom-bar.prev {
+      background: #D6DAE2;
+    }
+
+    .delta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--lime-soft);
+      color: var(--lime-text);
+    }
+
+    .delta-pill.up {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #ECEEF2 25%, #F5F6F8 50%, #ECEEF2 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 10px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast">
+    <i data-lucide="check-circle-2" style="width:16px;height:16px;"></i>
+    <span id="toastText">Đã lưu</span>
+  </div>
+
+  <!-- PIN Lock Screen -->
+  <div id="pinScreen" class="pin-screen">
+    <div class="pin-card">
+      <div class="pin-icon"><i data-lucide="lock" style="width:24px;height:24px;"></i></div>
+      <h2 style="font-size:19px;font-weight:700;margin-bottom:4px;">Mở khóa Sổ chi tiêu</h2>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:18px;">Nhập mã PIN đã cài đặt để truy cập dữ liệu Google Sheet</p>
+      <input id="pinInput" class="text-input tabular" type="password" inputmode="numeric" maxlength="6" placeholder="••••" style="text-align:center;font-size:22px;letter-spacing:0.35em;margin-bottom:14px;" />
+      <button id="pinSubmitBtn" class="btn-primary" onclick="submitPinUnlock()">Mở khóa</button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand-group">
+        <span class="brand-sub" id="spreadsheetName">Sổ tay chi tiêu</span>
+        <button class="month-trigger" onclick="openSheetPicker()">
+          <span id="activeSheetTitle">Chi tiêu Tháng 11</span>
+          <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="refreshBtn" title="Đồng bộ lại" onclick="refreshData()">
+          <i data-lucide="refresh-cw" style="width:17px;height:17px;"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: TỔNG QUAN -->
+    <main id="view-home" class="view active">
+      <!-- Balance Card -->
+      <section class="card">
+        <div class="balance-label">
+          <span>Tổng số dư còn lại</span>
+          <span id="txCountBadge" class="pill-badge">0 giao dịch</span>
+        </div>
+        <div class="balance-row">
+          <div id="totalBalanceDisplay" class="balance-value tabular">0 ₫</div>
+          <button class="eye-toggle" onclick="togglePrivacy()" aria-label="Ẩn/hiện số dư">
+            <i id="privacyIcon" data-lucide="eye" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+        <div class="balance-meta">
+          <span class="pill-badge">
+            <i data-lucide="trending-down" style="width:13px;height:13px;"></i>
+            Đã chi: <strong id="totalSpentBadge" class="tabular">0 ₫</strong>
+          </span>
+          <span class="pill-badge lime">
+            <i data-lucide="calendar-clock" style="width:13px;height:13px;"></i>
+            TB/ngày: <strong id="avgPerDayBadge" class="tabular">0 ₫</strong>
+          </span>
+        </div>
+        <button class="btn-primary" onclick="openTxModal()">
+          <i data-lucide="plus" style="width:18px;height:18px;"></i>
+          Ghi chi tiêu mới
+        </button>
+      </section>
+
+      <!-- Budget Progress Widget -->
+      <section id="homeBudgetCard" class="budget-card" onclick="openBudgetModal()">
+        <div class="budget-head">
+          <span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;">
+            <i data-lucide="target" style="width:16px;height:16px;color:var(--ink);"></i>
+            Ngân sách tháng
+          </span>
+          <span id="homeBudgetStatus" class="budget-status-pill">Chưa đặt</span>
+        </div>
+        <div id="homeBudgetBody"></div>
+      </section>
+
+      <!-- Dual Wallet Cards -->
+      <div class="section-header">
+        <h2 class="section-title">Nguồn tiền</h2>
+        <button class="section-link" onclick="openBalanceModal()">
+          <i data-lucide="sliders-horizontal" style="width:13px;height:13px;"></i>
+          Số dư đầu
+        </button>
+      </div>
+      <section class="wallets-grid">
+        <div class="wallet-card lime" onclick="openTxModalWithMethod('Chuyển khoản')">
+          <div class="wallet-top">
+            <span class="wallet-icon"><i data-lucide="landmark" style="width:17px;height:17px;"></i></span>
+            <span class="wallet-tag">Tài khoản</span>
+          </div>
+          <div class="wallet-bottom">
+            <div class="wallet-name">Số dư tài khoản</div>
+            <div id="bankBalanceDisplay" class="wallet-amount tabular">0 ₫</div>
+            <div id="bankSpentDisplay" class="wallet-sub tabular">Đã chi: 0 ₫</div>
+          </div>
+        </div>
+
+        <div class="wallet-card dark" onclick="openTxModalWithMethod('Tiền mặt')">
+          <div class="wallet-top">
+            <span class="wallet-icon"><i data-lucide="wallet" style="width:17px;height:17px;"></i></span>
+            <span class="wallet-tag">Tiền mặt</span>
+          </div>
+          <div class="wallet-bottom">
+            <div class="wallet-name">Số dư tiền mặt</div>
+            <div id="cashBalanceDisplay" class="wallet-amount tabular">0 ₫</div>
+            <div id="cashSpentDisplay" class="wallet-sub tabular">Đã chi: 0 ₫</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Daily Transactions -->
+      <div class="section-header">
+        <h2 class="section-title">Chi tiêu trong ngày</h2>
+        <button class="section-link" onclick="switchTab('history')">
+          Xem tất cả <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+        </button>
+      </div>
+      <section class="card" style="padding:14px 16px;">
+        <div class="day-nav-bar">
+          <div class="day-stepper">
+            <button class="day-step-btn" onclick="changeSelectedDay(-1)" aria-label="Ngày trước">
+              <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
+            </button>
+            <span id="selectedDayLabel" class="day-label-pill">Ngày 12</span>
+            <button class="day-step-btn" onclick="changeSelectedDay(1)" aria-label="Ngày sau">
+              <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span id="daySlotBadge" class="slot-pill">0/5 dòng</span>
+            <span id="daySpentTotal" class="slot-pill tabular" style="color:var(--ink);font-weight:700;">0 ₫</span>
+          </div>
+        </div>
+
+        <div id="dailyTxList" class="tx-list"></div>
+      </section>
+    </main>
+
+    <!-- VIEW 2: LỊCH SỬ -->
+    <main id="view-history" class="view">
+      <div class="search-box">
+        <i data-lucide="search" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        <input id="historySearch" type="text" placeholder="Tìm món ăn, cửa hàng, ghi chú..." oninput="renderHistory()" />
+      </div>
+
+      <div id="historyFilterRow" class="filter-scroll"></div>
+
+      <section class="card" style="padding:12px 16px;">
+        <div id="historyTxList" class="tx-list"></div>
+      </section>
+    </main>
+
+    <!-- VIEW 3: THỐNG KÊ -->
+    <main id="view-stats" class="view">
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <div class="stat-tile-label">Tổng chi tiêu</div>
+          <div id="statTotalSpent" class="stat-tile-val tabular">0 ₫</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label">Khoản chi lớn nhất</div>
+          <div id="statMaxExpense" class="stat-tile-val tabular">0 ₫</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label">TB chi tiêu / ngày</div>
+          <div id="statAvgDay" class="stat-tile-val tabular">0 ₫</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label">Tổng số giao dịch</div>
+          <div id="statTxCount" class="stat-tile-val tabular">0</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="section-header" style="margin:0 0 10px;">
+          <h2 class="section-title">Chi tiêu theo ngày</h2>
+          <div class="chart-tabs">
+            <button class="chart-tab-btn active" data-mode="all" onclick="setDailyChartMode('all')">Tất cả</button>
+            <button class="chart-tab-btn" data-mode="bank" onclick="setDailyChartMode('bank')">TK</button>
+            <button class="chart-tab-btn" data-mode="cash" onclick="setDailyChartMode('cash')">Tiền mặt</button>
+          </div>
+        </div>
+        <div id="chartInspectBar" class="chart-inspect-bar">
+          <span id="chartInspectText" style="font-weight:600;">Chạm vào cột ngày để xem chi tiết</span>
+          <button id="chartJumpBtn" class="section-link" style="display:none;color:var(--ink);" onclick="jumpToInspectedDay()">
+            Xem ngày <i data-lucide="arrow-up-right" style="width:13px;height:13px;"></i>
+          </button>
+        </div>
+        <div id="dailyBarChart" class="daily-chart-wrap"></div>
+        <div id="dailyChartAxis" class="chart-xaxis"></div>
+      </section>
+
+      <section id="momCompareCard" class="card">
+        <div class="section-header" style="margin:0 0 12px;">
+          <div>
+            <h2 class="section-title">So sánh liên tháng</h2>
+            <div id="momSubtitle" style="font-size:12px;color:var(--ink-2);margin-top:2px;">Đang đối chiếu...</div>
+          </div>
+          <span id="momDeltaBadge" class="delta-pill">0%</span>
+        </div>
+        <div id="momCompareBody"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header" style="margin:0 0 14px;">
+          <h2 class="section-title">Danh mục & Ngân sách</h2>
+          <button class="section-link" onclick="openBudgetModal()">
+            <i data-lucide="sliders-horizontal" style="width:13px;height:13px;"></i>
+            Đặt hạn mức
+          </button>
+        </div>
+        <div id="categoryBreakdown"></div>
+      </section>
+    </main>
+
+    <!-- VIEW 4: CÀI ĐẶT -->
+    <main id="view-settings" class="view">
+      <div class="settings-group-title">Dữ liệu Google Sheet</div>
+      <section class="card" style="padding:6px 16px;">
+        <div class="settings-item" onclick="openSheetPicker()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="calendar" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Tab tháng đang đồng bộ</div>
+              <div id="settingSheetName" class="settings-sub">Chi tiêu Tháng 11</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+
+        <div class="settings-item" onclick="openNewMonthModal()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="folder-plus" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Khởi tạo tab tháng mới</div>
+              <div class="settings-sub">Nhân bản mẫu chuẩn, tự chia 5 hàng/ngày</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+
+        <div class="settings-item" onclick="toggleAutoCreatePref('autoCreateMonth')">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="sparkles" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Tự động tạo sheet khi sang tháng mới</div>
+              <div id="settingAutoCreate" class="settings-sub">Đang bật • Tự tạo khi mở app đầu tháng</div>
+            </div>
+          </div>
+          <span id="autoCreatePill" class="pill-badge lime">Bật</span>
+        </div>
+
+        <div class="settings-item" onclick="toggleAutoCreatePref('carryOverBalance')">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="arrow-right-left" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Kết chuyển số dư cuối tháng trước</div>
+              <div id="settingCarryOver" class="settings-sub">Đang bật • Mang số dư sang đầu tháng mới</div>
+            </div>
+          </div>
+          <span id="carryOverPill" class="pill-badge lime">Bật</span>
+        </div>
+
+        <div class="settings-item" onclick="openBudgetModal()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="target" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Ngân sách tháng & Hạn mức danh mục</div>
+              <div id="settingBudgetSummary" class="settings-sub tabular">Chưa thiết lập hạn mức</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+
+        <div class="settings-item" onclick="openBalanceModal()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="coins" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Số dư ban đầu (đầu tháng)</div>
+              <div id="settingInitialBal" class="settings-sub tabular">Tiền mặt: 0 ₫ • TK: 0 ₫</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+
+        <div class="settings-item" onclick="openExternalSheet()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="external-link" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Mở Google Sheet gốc</div>
+              <div class="settings-sub">Xem toàn bộ bảng tính trên Google Sheets</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+      </section>
+
+      <div class="settings-group-title">Bảo mật & Hệ thống</div>
+      <section class="card" style="padding:6px 16px;">
+        <div class="settings-item" onclick="openApiSetupModal()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="link" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Kết nối Apps Script API</div>
+              <div id="settingApiStatus" class="settings-sub">Chưa cấu hình URL /exec</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+
+        <div id="installPwaRow" class="settings-item" style="display:none;" onclick="triggerPwaInstall()">
+          <div class="settings-left">
+            <span class="settings-icon" style="background:var(--lime-soft);color:var(--lime-text);"><i data-lucide="smartphone" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Cài đặt FlexMoney như App</div>
+              <div class="settings-sub">Mở toàn màn hình, không thanh địa chỉ</div>
+            </div>
+          </div>
+          <span class="pill-badge lime">Cài đặt</span>
+        </div>
+
+        <div class="settings-item" onclick="openPinSettingsModal()">
+          <div class="settings-left">
+            <span class="settings-icon"><i data-lucide="shield-check" style="width:18px;height:18px;"></i></span>
+            <div>
+              <div class="settings-label">Mã PIN khóa ứng dụng</div>
+              <div id="settingPinStatus" class="settings-sub">Đang tắt</div>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" style="width:17px;height:17px;color:var(--ink-3);"></i>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">
+        <i data-lucide="home" style="width:20px;height:20px;"></i>
+        <span>Tổng quan</span>
+      </button>
+      <button class="nav-btn" data-tab="history" onclick="switchTab('history')">
+        <i data-lucide="receipt-text" style="width:20px;height:20px;"></i>
+        <span>Lịch sử</span>
+      </button>
+      <button class="nav-btn" data-tab="stats" onclick="switchTab('stats')">
+        <i data-lucide="pie-chart" style="width:20px;height:20px;"></i>
+        <span>Thống kê</span>
+      </button>
+      <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">
+        <i data-lucide="settings" style="width:20px;height:20px;"></i>
+        <span>Cài đặt</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL: Kết nối Apps Script API -->
+  <div id="apiSetupModal" class="modal-backdrop" onclick="closeBackdrop(event, 'apiSetupModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Kết nối Google Sheet API</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('apiSetupModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:12px;">
+        Dán đường dẫn Web App (kết thúc bằng <strong>/exec</strong>) từ Google Apps Script của bạn vào đây để đồng bộ dữ liệu thật:
+      </p>
+      <div class="field-group">
+        <label class="field-label">Apps Script Web App URL</label>
+        <input id="gasUrlInput" class="text-input" type="url" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <button id="saveGasUrlBtn" class="btn-primary" onclick="handleSaveGasUrl()">Kiểm tra & Lưu kết nối</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Thêm / Sửa giao dịch -->
+  <div id="txModal" class="modal-backdrop" onclick="closeBackdrop(event, 'txModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 id="txModalTitle" class="sheet-title">Ghi chi tiêu mới</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('txModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+
+      <!-- Quick Smart Parse -->
+      <div id="quickParseWrap" class="quick-parse-box">
+        <i data-lucide="sparkles" style="width:16px;height:16px;color:var(--lime-text);flex-shrink:0;"></i>
+        <input id="quickParseInput" type="text" placeholder="Nhập nhanh: VD 'Cơm gà 35k' hoặc 'Xăng 60k tm'" oninput="handleQuickParse(this.value)" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Số tiền</label>
+        <div class="amount-input-wrap">
+          <input id="txAmountDisplay" class="amount-input tabular" type="text" inputmode="numeric" placeholder="0" oninput="formatAmountInput(this)" />
+          <span class="currency-suffix">₫</span>
+        </div>
+        <div class="preset-row">
+          <button type="button" class="preset-btn accent" onclick="multiplyThousand()">× 1.000</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(15000)">15k</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(25000)">25k</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(30000)">30k</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(50000)">50k</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(100000)">100k</button>
+          <button type="button" class="preset-btn" onclick="setPresetAmount(200000)">200k</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Nội dung chi tiêu</label>
+        <input id="txTitleInput" class="text-input" type="text" placeholder="VD: Cơm gà, Gửi xe, Mua đồ..." />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Danh mục</label>
+        <div id="categoryGrid" class="cat-grid"></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Phương thức thanh toán</label>
+        <div id="methodGrid" class="method-grid"></div>
+      </div>
+
+      <div class="row-2col">
+        <div class="field-group" style="margin-bottom:0;">
+          <label class="field-label">Ngày (1–31)</label>
+          <input id="txDayInput" class="text-input tabular" type="number" min="1" max="31" style="text-align:center;font-weight:700;" />
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <label class="field-label">Ghi chú (tuỳ chọn)</label>
+          <input id="txNoteInput" class="text-input" type="text" placeholder="Thêm ghi chú..." />
+        </div>
+      </div>
+
+      <div class="sheet-actions">
+        <button id="txDeleteBtn" class="btn-danger-soft" style="display:none;" onclick="handleDeleteTx()">
+          <i data-lucide="trash-2" style="width:17px;height:17px;"></i>
+          Xóa
+        </button>
+        <button id="txSaveBtn" class="btn-primary" onclick="handleSaveTx()">
+          <i data-lucide="check" style="width:18px;height:18px;"></i>
+          <span>Lưu & Đồng bộ Sheet</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Chọn tab tháng -->
+  <div id="sheetPickerModal" class="modal-backdrop" onclick="closeBackdrop(event, 'sheetPickerModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Chọn tháng đồng bộ</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('sheetPickerModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <div id="sheetPickerList" class="tx-list"></div>
+      <div style="margin-top:14px;">
+        <button class="btn-secondary" onclick="closeModal('sheetPickerModal'); openNewMonthModal();">
+          <i data-lucide="folder-plus" style="width:16px;height:16px;"></i>
+          Khởi tạo tab tháng mới
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Khởi tạo tab tháng mới -->
+  <div id="newMonthModal" class="modal-backdrop" onclick="closeBackdrop(event, 'newMonthModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Khởi tạo tab tháng mới</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('newMonthModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:14px;">
+        Tự động nhân bản cấu trúc từ tháng gần nhất, chia đúng số ngày trong tháng (28–31 ngày), mỗi ngày 5 dòng trống và giữ nguyên công thức.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="field-group" style="margin-bottom:0;">
+          <label class="field-label">Tháng (1–12)</label>
+          <input id="newMonthInput" class="text-input tabular" type="number" min="1" max="12" />
+        </div>
+        <div class="field-group" style="margin-bottom:0;">
+          <label class="field-label">Năm</label>
+          <input id="newYearInput" class="text-input tabular" type="number" min="2024" max="2099" />
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface-soft);margin-bottom:16px;cursor:pointer;">
+        <input id="newMonthCarryOver" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--ink);" />
+        <span style="font-size:13px;font-weight:600;">Kết chuyển số dư tiền mặt & tài khoản tháng trước</span>
+      </label>
+      <button id="createMonthBtn" class="btn-primary" onclick="handleCreateMonthSheet()">Tạo tab tháng mới</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Cài đặt ngân sách -->
+  <div id="budgetModal" class="modal-backdrop" onclick="closeBackdrop(event, 'budgetModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Ngân sách & Hạn mức tháng</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('budgetModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:14px;">
+        Nhập hạn mức tối đa (để 0 nếu không giới hạn). Hệ thống sẽ cảnh báo khi chi tiêu chạm 80% hoặc vượt 100%.
+      </p>
+      <div class="field-group">
+        <label class="field-label">Ngân sách tổng tháng (VNĐ)</label>
+        <input id="budgetMonthlyInput" class="text-input tabular" type="text" inputmode="numeric" placeholder="VD: 3.000.000" oninput="formatAmountInput(this)" />
+      </div>
+      <div class="field-label" style="margin-top:12px;margin-bottom:8px;">Hạn mức riêng theo danh mục</div>
+      <div id="budgetCategoryInputs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;"></div>
+      <button id="saveBudgetBtn" class="btn-primary" onclick="handleSaveBudgets()">Lưu ngân sách</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Số dư ban đầu -->
+  <div id="balanceModal" class="modal-backdrop" onclick="closeBackdrop(event, 'balanceModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Số dư ban đầu</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('balanceModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tiền mặt ban đầu (Ô B5)</label>
+        <input id="initCashInput" class="text-input tabular" type="number" min="0" placeholder="0" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tài khoản ban đầu (Ô C5)</label>
+        <input id="initBankInput" class="text-input tabular" type="number" min="0" placeholder="0" />
+      </div>
+      <button id="saveInitBalBtn" class="btn-primary" onclick="handleSaveInitialBalances()">Cập nhật vào Sheet</button>
+    </div>
+  </div>
+
+  <!-- MODAL: Cài đặt mã PIN -->
+  <div id="pinModal" class="modal-backdrop" onclick="closeBackdrop(event, 'pinModal')">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 class="sheet-title">Bảo mật mã PIN</h3>
+        <button class="icon-btn" style="width:34px;height:34px;" onclick="closeModal('pinModal')">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--ink-2);margin-bottom:14px;">
+        Cài mã PIN 4–6 số để chỉ mình bạn xem và ghi vào Sheet khi deploy link Web App lên điện thoại.
+      </p>
+      <div id="currentPinField" class="field-group" style="display:none;">
+        <label class="field-label">Mã PIN hiện tại</label>
+        <input id="oldPinInput" class="text-input tabular" type="password" inputmode="numeric" maxlength="6" placeholder="••••" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Mã PIN mới (để trống nếu muốn tắt PIN)</label>
+        <input id="newPinInput" class="text-input tabular" type="password" inputmode="numeric" maxlength="6" placeholder="Nhập 4–6 chữ số" />
+      </div>
+      <button id="savePinBtn" class="btn-primary" onclick="handleSavePin()">Lưu cài đặt PIN</button>
+    </div>
+  </div>
+
+  <script>
+    const CATEGORIES = [
+      { id: 'Ăn uống', icon: 'utensils' },
+      { id: 'Đi lại', icon: 'car' },
+      { id: 'Mua sắm', icon: 'shopping-bag' },
+      { id: 'Nhà ở', icon: 'home' },
+      { id: 'Giải trí', icon: 'gamepad-2' },
+      { id: 'Sức khỏe', icon: 'heart-pulse' },
+      { id: 'Tiền vào', icon: 'arrow-down-left' },
+      { id: 'Rút tiền', icon: 'banknote' },
+      { id: 'Nộp tiền', icon: 'arrow-up-right' }
+    ];
+
+    const METHODS = [
+      { id: 'Chuyển khoản', icon: 'landmark' },
+      { id: 'Tiền mặt', icon: 'wallet' },
+      { id: 'Rút tiền', icon: 'banknote' },
+      { id: 'Nộp tiền', icon: 'arrow-up-right' }
+    ];
+
+    let appState = null;
+    let activeTab = 'home';
+    let selectedDay = new Date().getDate();
+    let activeSheetName = '';
+    let historyCategoryFilter = 'Tất cả';
+    let dailyChartMode = 'all';
+    let inspectedChartDay = new Date().getDate();
+    let privacyHidden = localStorage.getItem('chi_tieu_privacy') === '1';
+    let cachedPin = sessionStorage.getItem('chi_tieu_pin') || '';
+
+    // Form state
+    let editingRow = null;
+    let formCategory = 'Ăn uống';
+    let formMethod = 'Chuyển khoản';
+
+    function formatVND(num) {
+      if (privacyHidden) return '•••••• ₫';
+      return Number(num || 0).toLocaleString('vi-VN') + ' ₫';
+    }
+
+    function formatVNDAlways(num) {
+      return Number(num || 0).toLocaleString('vi-VN') + ' ₫';
+    }
+
+    function showToast(msg, isError) {
+      const el = document.getElementById('toast');
+      document.getElementById('toastText').textContent = msg;
+      el.classList.toggle('error', Boolean(isError));
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    // Có thể dán sẵn link /exec vào đây nếu muốn dùng chung mọi thiết bị không cần nhập tay:
+    const DEFAULT_GAS_API_URL = '';
+    const GAS_URL_STORAGE_KEY = 'flexmoney_gas_url';
+    let deferredInstallPrompt = null;
+
+    function getGasApiUrl() {
+      return (localStorage.getItem(GAS_URL_STORAGE_KEY) || DEFAULT_GAS_API_URL || '').trim();
+    }
+
+    // Bridge: Google Apps Script REST API (GitHub Pages PWA), google.script.run, hoặc Mock nội bộ
+    async function runServer(fnName, payload) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler((err) => reject(new Error(err && err.message ? err.message : String(err))))[fnName](payload);
+        });
+      }
+
+      const apiUrl = getGasApiUrl();
+      if (apiUrl) {
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'cors',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: fnName, payload: payload || {} })
+        });
+        if (!res.ok) {
+          throw new Error(`Lỗi kết nối API (${res.status})`);
+        }
+        const json = await res.json();
+        if (!json.ok) {
+          throw new Error(json.error || 'Lỗi xử lý trên Apps Script');
+        }
+        return json.data;
+      }
+
+      // Nếu đang chạy trên GitHub Pages / host thật mà chưa nhập URL /exec -> mở popup cấu hình
+      const host = window.location.hostname;
+      if (host && host !== 'localhost' && host !== '127.0.0.1') {
+        openApiSetupModal();
+        throw new Error('Vui lòng dán đường dẫn Apps Script (/exec) để kết nối Sheet');
+      }
+
+      // Local preview mock
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            resolve(mockServer(fnName, payload));
+          } catch (e) {
+            reject(e);
+          }
+        }, 180);
+      });
+    }
+
+    function mockServer(fnName, payload) {
+      const KEY = 'chi_tieu_mock_v1';
+      let store = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!store) {
+        store = {
+          spreadsheetTitle: 'Bản sao của Chi tiêu (Bản xem thử)',
+          spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/11a9_h74PwbFJXvmIJMhUdUVxsuvfEAv9lu6QFMZrlG0/edit',
+          activeSheet: 'Chi tiêu Tháng 11',
+          sheets: ['Chi tiêu Tháng 11', 'Chi tiêu Tháng 9'],
+          initialCash: 0,
+          initialBank: 0,
+          transactions: [
+            { row: 21, day: 1, title: 'Tiền vào', category: 'Tiền vào', method: 'Chuyển khoản', amount: 1000000, note: '' },
+            { row: 74, day: 12, title: 'Bánh mì', category: 'Ăn uống', method: 'Chuyển khoản', amount: 25000, note: '' },
+            { row: 75, day: 12, title: 'Cơm gà', category: 'Ăn uống', method: 'Chuyển khoản', amount: 30000, note: '' },
+            { row: 76, day: 12, title: 'Warrior (2) + Redbull', category: 'Ăn uống', method: 'Chuyển khoản', amount: 30600, note: '' }
+          ]
+        };
+        localStorage.setItem(KEY, JSON.stringify(store));
+      }
+
+      if (fnName === 'addTransaction') {
+        const nextRow = (store.transactions.reduce((m, t) => Math.max(m, t.row), 76)) + 1;
+        store.transactions.push({
+          row: nextRow,
+          day: Number(payload.day),
+          title: payload.title,
+          category: payload.category,
+          method: payload.method,
+          amount: Number(payload.amount),
+          note: payload.note || ''
+        });
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (fnName === 'updateTransaction') {
+        const idx = store.transactions.findIndex((t) => t.row === payload.row);
+        if (idx >= 0) {
+          store.transactions[idx] = { ...store.transactions[idx], ...payload, day: Number(payload.day), amount: Number(payload.amount) };
+          localStorage.setItem(KEY, JSON.stringify(store));
+        }
+      } else if (fnName === 'deleteTransaction') {
+        store.transactions = store.transactions.filter((t) => t.row !== payload.row);
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (fnName === 'updateInitialBalances') {
+        store.initialCash = Number(payload.initialCash || 0);
+        store.initialBank = Number(payload.initialBank || 0);
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (fnName === 'createMonthSheet') {
+        const name = `Chi tiêu Tháng ${payload.month}`;
+        if (!store.sheets.includes(name)) store.sheets.unshift(name);
+        store.activeSheet = name;
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (fnName === 'updateAutoCreateSettings') {
+        if (typeof payload.autoCreateMonth === 'boolean') store.autoCreateMonth = payload.autoCreateMonth;
+        if (typeof payload.carryOverBalance === 'boolean') store.carryOverBalance = payload.carryOverBalance;
+        localStorage.setItem(KEY, JSON.stringify(store));
+        return {
+          autoCreateMonth: store.autoCreateMonth !== false,
+          carryOverBalance: store.carryOverBalance !== false
+        };
+      } else if (fnName === 'saveBudgets') {
+        store.budgets = {
+          monthlyLimit: Math.max(0, Number(payload.monthlyLimit || 0)),
+          categoryLimits: payload.categoryLimits || {}
+        };
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (fnName === 'verifyPin') {
+        return { ok: true, hasPin: false };
+      }
+
+      const tx = store.transactions;
+      const isExpense = (t) => !['Tiền vào', 'Nộp tiền', 'Rút tiền'].includes(t.category) && !['Nộp tiền', 'Rút tiền'].includes(t.method);
+      const cashSpent = tx.filter((t) => isExpense(t) && t.method === 'Tiền mặt').reduce((s, t) => s + t.amount, 0);
+      const bankSpent = tx.filter((t) => isExpense(t) && t.method === 'Chuyển khoản').reduce((s, t) => s + t.amount, 0);
+      const totalSpent = cashSpent + bankSpent;
+      const cashIn = tx.filter((t) => t.category === 'Tiền vào' && t.method === 'Tiền mặt').reduce((s, t) => s + t.amount, 0);
+      const bankIn = tx.filter((t) => t.category === 'Tiền vào' && t.method === 'Chuyển khoản').reduce((s, t) => s + t.amount, 0);
+      const cashBalance = store.initialCash - cashSpent + cashIn;
+      const bankBalance = store.initialBank - bankSpent + bankIn;
+      const expTx = tx.filter(isExpense);
+      const uniqueDays = new Set(expTx.map((t) => t.day)).size || 1;
+      const cats = ['Ăn uống', 'Nhà ở', 'Đi lại', 'Mua sắm', 'Giải trí', 'Sức khỏe'].map((name) => {
+        const list = tx.filter((t) => t.category === name);
+        const amount = list.reduce((s, t) => s + t.amount, 0);
+        return { name, amount, ratio: totalSpent ? amount / totalSpent : 0, count: list.length };
+      });
+      const dayStats = {};
+      for (let d = 1; d <= 30; d++) {
+        const used = tx.filter((t) => t.day === d).length;
+        dayStats[d] = { totalSlots: Math.max(5, used), usedSlots: used };
+      }
+
+      return {
+        locked: false,
+        hasPin: false,
+        autoCreateMonth: store.autoCreateMonth !== false,
+        carryOverBalance: store.carryOverBalance !== false,
+        autoCreatedSheet: '',
+        spreadsheetUrl: store.spreadsheetUrl,
+        spreadsheetTitle: store.spreadsheetTitle,
+        activeSheet: payload && payload.sheetName ? payload.sheetName : store.activeSheet,
+        sheets: store.sheets,
+        selectedDay: (payload && payload.selectedDay) || selectedDay,
+        dashboard: {
+          initialCash: store.initialCash,
+          initialBank: store.initialBank,
+          initialTotal: store.initialCash + store.initialBank,
+          cashBalance,
+          bankBalance,
+          totalBalance: cashBalance + bankBalance,
+          cashSpent,
+          bankSpent,
+          totalSpent,
+          avgPerDay: totalSpent / uniqueDays,
+          txCount: expTx.length,
+          maxExpense: expTx.reduce((m, t) => Math.max(m, t.amount), 0)
+        },
+        categories: cats,
+        budgets: store.budgets || {
+          monthlyLimit: 0,
+          categoryLimits: { 'Ăn uống': 0, 'Nhà ở': 0, 'Đi lại': 0, 'Mua sắm': 0, 'Giải trí': 0, 'Sức khỏe': 0 }
+        },
+        prevMonth: {
+          sheetName: 'Chi tiêu Tháng 9',
+          cashSpent: 40000,
+          bankSpent: 887000,
+          totalSpent: 927000,
+          avgPerDay: 154500,
+          txCount: 31,
+          maxExpense: 65000,
+          categories: { 'Ăn uống': 645000, 'Nhà ở': 34000, 'Đi lại': 138000, 'Mua sắm': 95000, 'Giải trí': 0, 'Sức khỏe': 15000 }
+        },
+        dayStats,
+        transactions: tx,
+        meta: fnName === 'addTransaction' ? { writtenRow: 77, expandedRow: false } : undefined
+      };
+    }
+
+    async function refreshData() {
+      const btn = document.getElementById('refreshBtn');
+      btn.classList.add('spinning');
+      try {
+        const res = await runServer('getAppState', {
+          pin: cachedPin,
+          sheetName: activeSheetName,
+          selectedDay: selectedDay
+        });
+        if (res.locked) {
+          document.getElementById('pinScreen').classList.add('open');
+          return;
+        }
+        document.getElementById('pinScreen').classList.remove('open');
+        appState = res;
+        activeSheetName = res.activeSheet;
+        renderAll();
+        if (res.autoCreatedSheet) {
+          showToast(`Chào tháng mới! Đã tự tạo tab ${res.autoCreatedSheet}`);
+        }
+      } catch (err) {
+        if (String(err.message).includes('UNAUTHORIZED_PIN')) {
+          document.getElementById('pinScreen').classList.add('open');
+        } else {
+          showToast(err.message || 'Lỗi kết nối Sheet', true);
+        }
+      } finally {
+        btn.classList.remove('spinning');
+      }
+    }
+
+    async function submitPinUnlock() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return;
+      const btn = document.getElementById('pinSubmitBtn');
+      btn.disabled = true;
+      try {
+        const res = await runServer('verifyPin', pin);
+        if (res.ok) {
+          cachedPin = pin;
+          sessionStorage.setItem('chi_tieu_pin', pin);
+          document.getElementById('pinInput').value = '';
+          await refreshData();
+        } else {
+          showToast('Mã PIN chưa đúng', true);
+        }
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderAll() {
+      if (!appState) return;
+      document.getElementById('spreadsheetName').textContent = appState.spreadsheetTitle;
+      document.getElementById('activeSheetTitle').textContent = appState.activeSheet;
+      document.getElementById('settingSheetName').textContent = appState.activeSheet;
+
+      const d = appState.dashboard;
+      document.getElementById('totalBalanceDisplay').textContent = formatVND(d.totalBalance);
+      document.getElementById('totalSpentBadge').textContent = formatVND(d.totalSpent);
+      document.getElementById('avgPerDayBadge').textContent = formatVND(Math.round(d.avgPerDay));
+      document.getElementById('txCountBadge').textContent = `${d.txCount} giao dịch`;
+
+      document.getElementById('bankBalanceDisplay').textContent = formatVND(d.bankBalance);
+      document.getElementById('bankSpentDisplay').textContent = `Đã chi: ${formatVND(d.bankSpent)}`;
+      document.getElementById('cashBalanceDisplay').textContent = formatVND(d.cashBalance);
+      document.getElementById('cashSpentDisplay').textContent = `Đã chi: ${formatVND(d.cashSpent)}`;
+
+      const privacyIcon = document.getElementById('privacyIcon');
+      privacyIcon.setAttribute('data-lucide', privacyHidden ? 'eye-off' : 'eye');
+
+      // Settings texts
+      document.getElementById('settingInitialBal').textContent =
+        `Tiền mặt: ${formatVNDAlways(d.initialCash)} • TK: ${formatVNDAlways(d.initialBank)}`;
+      document.getElementById('settingPinStatus').textContent = appState.hasPin ? 'Đang bật bảo vệ PIN' : 'Đang tắt';
+
+      const autoOn = appState.autoCreateMonth !== false;
+      const carryOn = appState.carryOverBalance !== false;
+      document.getElementById('settingAutoCreate').textContent = autoOn
+        ? 'Đang bật • Tự tạo khi mở app đầu tháng'
+        : 'Đang tắt • Chỉ tạo thủ công';
+      const autoPill = document.getElementById('autoCreatePill');
+      autoPill.textContent = autoOn ? 'Bật' : 'Tắt';
+      autoPill.classList.toggle('lime', autoOn);
+
+      document.getElementById('settingCarryOver').textContent = carryOn
+        ? 'Đang bật • Mang số dư sang đầu tháng mới'
+        : 'Đang tắt • Đầu tháng bắt đầu từ 0 ₫';
+      const carryPill = document.getElementById('carryOverPill');
+      carryPill.textContent = carryOn ? 'Bật' : 'Tắt';
+      carryPill.classList.toggle('lime', carryOn);
+
+      const mLimit = (appState.budgets && appState.budgets.monthlyLimit) || 0;
+      document.getElementById('settingBudgetSummary').textContent = mLimit > 0
+        ? `Giới hạn tháng: ${formatVNDAlways(mLimit)}`
+        : 'Chưa thiết lập hạn mức';
+
+      renderBudgetHome();
+      renderDailyTransactions();
+      renderHistory();
+      renderStats();
+      refreshIcons();
+    }
+
+    function getCategoryIcon(cat) {
+      const found = CATEGORIES.find((c) => c.id === cat);
+      return found ? found.icon : 'circle-dot';
+    }
+
+    function isIncomeOrTransfer(tx) {
+      return tx.category === 'Tiền vào' || tx.category === 'Nộp tiền' || tx.category === 'Rút tiền';
+    }
+
+    function renderTxItemHtml(tx) {
+      const isIncome = tx.category === 'Tiền vào';
+      const isTransfer = tx.category === 'Nộp tiền' || tx.category === 'Rút tiền';
+      const iconName = getCategoryIcon(tx.category);
+      const boxClass = isIncome ? 'income' : isTransfer ? 'transfer' : '';
+      const sign = isIncome ? '+' : isTransfer ? '' : '-';
+      const amtClass = isIncome ? 'income' : '';
+      const methodChipClass = tx.method === 'Chuyển khoản' ? 'lime' : '';
+
+      return `
+        <div class="tx-item" onclick="openEditTx(${tx.row})">
+          <div class="tx-icon-box ${boxClass}">
+            <i data-lucide="${iconName}" style="width:19px;height:19px;"></i>
+          </div>
+          <div class="tx-main">
+            <div class="tx-title">${escapeHtml(tx.title)}</div>
+            <div class="tx-meta">
+              <span>${escapeHtml(tx.category)}</span>
+              ${tx.note ? `<span>• ${escapeHtml(tx.note)}</span>` : ''}
+            </div>
+          </div>
+          <div class="tx-right">
+            <div class="tx-amount tabular ${amtClass}">${sign}${formatVNDAlways(tx.amount)}</div>
+            <span class="tx-method-chip ${methodChipClass}">${escapeHtml(tx.method)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDailyTransactions() {
+      const today = new Date().getDate();
+      const label = selectedDay === today ? `Ngày ${selectedDay} • Hôm nay` : `Ngày ${selectedDay}`;
+      document.getElementById('selectedDayLabel').textContent = label;
+
+      const list = (appState.transactions || []).filter((t) => t.day === selectedDay);
+      const daySpent = list
+        .filter((t) => !isIncomeOrTransfer(t) && t.method !== 'Nộp tiền' && t.method !== 'Rút tiền')
+        .reduce((s, t) => s + t.amount, 0);
+
+      document.getElementById('daySpentTotal').textContent = formatVNDAlways(daySpent);
+
+      const stat = (appState.dayStats && appState.dayStats[selectedDay]) || { totalSlots: 5, usedSlots: list.length };
+      const slotEl = document.getElementById('daySlotBadge');
+      slotEl.textContent = `${stat.usedSlots}/${stat.totalSlots} dòng`;
+      slotEl.classList.toggle('expanded', stat.totalSlots > 5);
+
+      const container = document.getElementById('dailyTxList');
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="receipt" style="width:22px;height:22px;"></i></div>
+            <div style="font-weight:600;color:var(--ink);margin-bottom:3px;">Chưa có khoản nào ngày ${selectedDay}</div>
+            <div style="font-size:12px;">Nhấn "Ghi chi tiêu mới" để đồng bộ vào Sheet</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = list.map(renderTxItemHtml).join('');
+      }
+    }
+
+    function renderHistory() {
+      if (!appState) return;
+      const filterRow = document.getElementById('historyFilterRow');
+      const filterNames = ['Tất cả', ...CATEGORIES.map((c) => c.id)];
+      filterRow.innerHTML = filterNames
+        .map(
+          (name) =>
+            `<button class="filter-chip ${historyCategoryFilter === name ? 'active' : ''}" onclick="setHistoryFilter('${name}')">${name}</button>`
+        )
+        .join('');
+
+      const q = (document.getElementById('historySearch').value || '').trim().toLowerCase();
+      const filtered = (appState.transactions || []).filter((t) => {
+        if (historyCategoryFilter !== 'Tất cả' && t.category !== historyCategoryFilter) return false;
+        if (q) {
+          const hay = `${t.title} ${t.category} ${t.method} ${t.note}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById('historyTxList');
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="search-x" style="width:22px;height:22px;"></i></div>
+            <div style="font-weight:600;color:var(--ink);">Không tìm thấy giao dịch</div>
+          </div>
+        `;
+        refreshIcons();
+        return;
+      }
+
+      // Nhóm theo ngày giảm dần (mới nhất ở trên)
+      const grouped = {};
+      filtered.forEach((t) => {
+        if (!grouped[t.day]) grouped[t.day] = [];
+        grouped[t.day].push(t);
+      });
+      const days = Object.keys(grouped)
+        .map(Number)
+        .sort((a, b) => b - a);
+
+      container.innerHTML = days
+        .map((d) => {
+          const items = grouped[d];
+          const daySum = items
+            .filter((t) => !isIncomeOrTransfer(t))
+            .reduce((s, t) => s + t.amount, 0);
+          return `
+            <div class="day-group-header">
+              <span>Ngày ${String(d).padStart(2, '0')}</span>
+              <span class="tabular">${formatVNDAlways(daySum)}</span>
+            </div>
+            ${items.map(renderTxItemHtml).join('')}
+          `;
+        })
+        .join('');
+      refreshIcons();
+    }
+
+    function renderBudgetHome() {
+      const statusEl = document.getElementById('homeBudgetStatus');
+      const bodyEl = document.getElementById('homeBudgetBody');
+      const budgets = appState.budgets || { monthlyLimit: 0, categoryLimits: {} };
+      const limit = Number(budgets.monthlyLimit || 0);
+      const spent = Number(appState.dashboard.totalSpent || 0);
+
+      if (!limit || limit <= 0) {
+        statusEl.className = 'budget-status-pill';
+        statusEl.textContent = 'Thiết lập';
+        bodyEl.innerHTML = `
+          <div style="font-size:12.5px;color:var(--ink-2);">
+            Chạm để đặt hạn mức chi tiêu tháng & cảnh báo khi sắp vượt mức
+          </div>
+        `;
+        return;
+      }
+
+      const pct = (spent / limit) * 100;
+      const pctRound = Math.round(pct * 10) / 10;
+      const barW = Math.min(100, Math.round(pct));
+      let stateClass = '';
+      let stateText = `An toàn • ${pctRound}%`;
+      if (pct >= 100) {
+        stateClass = 'danger';
+        stateText = `Vượt mức • ${pctRound}%`;
+      } else if (pct >= 80) {
+        stateClass = 'warn';
+        stateText = `Sắp chạm • ${pctRound}%`;
+      }
+
+      const remaining = limit - spent;
+      statusEl.className = `budget-status-pill ${stateClass}`;
+      statusEl.textContent = stateText;
+
+      bodyEl.innerHTML = `
+        <div class="budget-track">
+          <div class="budget-fill ${stateClass}" style="width:${barW}%"></div>
+        </div>
+        <div class="budget-sub-row">
+          <span class="tabular">Đã chi: <strong>${formatVND(spent)}</strong> / ${formatVND(limit)}</span>
+          <span class="tabular" style="font-weight:600;color:${remaining < 0 ? 'var(--danger)' : 'var(--ink)'};">
+            ${remaining >= 0 ? 'Còn ' + formatVND(remaining) : 'Vượt ' + formatVND(Math.abs(remaining))}
+          </span>
+        </div>
+      `;
+    }
+
+    function setDailyChartMode(mode) {
+      dailyChartMode = mode;
+      document.querySelectorAll('.chart-tab-btn').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+      });
+      renderDailyChart();
+      refreshIcons();
+    }
+
+    function inspectChartDay(day) {
+      inspectedChartDay = day;
+      renderDailyChart();
+      refreshIcons();
+    }
+
+    function jumpToInspectedDay() {
+      selectedDay = inspectedChartDay;
+      switchTab('home');
+      renderDailyTransactions();
+      refreshIcons();
+    }
+
+    function renderDailyChart() {
+      if (!appState) return;
+      const daysCount = Math.max(30, ...Object.keys(appState.dayStats || {}).map(Number));
+      const txList = (appState.transactions || []).filter((t) => {
+        if (isIncomeOrTransfer(t) || t.method === 'Nộp tiền' || t.method === 'Rút tiền') return false;
+        if (dailyChartMode === 'bank') return t.method === 'Chuyển khoản';
+        if (dailyChartMode === 'cash') return t.method === 'Tiền mặt';
+        return true;
+      });
+
+      const dayMap = {};
+      for (let d = 1; d <= daysCount; d++) dayMap[d] = { total: 0, count: 0 };
+      txList.forEach((t) => {
+        if (t.day && dayMap[t.day]) {
+          dayMap[t.day].total += t.amount;
+          dayMap[t.day].count += 1;
+        }
+      });
+
+      const vals = Object.values(dayMap).map((x) => x.total);
+      const maxDayVal = Math.max(1, ...vals);
+      const activeDays = vals.filter((v) => v > 0);
+      const avgVal = activeDays.length ? activeDays.reduce((a, b) => a + b, 0) / activeDays.length : 0;
+      const avgPct = avgVal > 0 ? Math.min(92, Math.round((avgVal / maxDayVal) * 100)) : 0;
+
+      const chartEl = document.getElementById('dailyBarChart');
+      let html = '';
+      if (avgVal > 0) {
+        html += `<div class="daily-avg-line" style="bottom:${avgPct}%"><span class="daily-avg-tag tabular">TB ${Math.round(avgVal / 1000)}k</span></div>`;
+      }
+      for (let d = 1; d <= daysCount; d++) {
+        const info = dayMap[d];
+        const hPct = info.total > 0 ? Math.max(6, Math.round((info.total / maxDayVal) * 100)) : 2;
+        const isActive = inspectedChartDay === d;
+        html += `
+          <div class="day-col ${isActive ? 'active' : ''}" onclick="inspectChartDay(${d})" title="Ngày ${d}: ${formatVNDAlways(info.total)}">
+            <div class="day-bar ${info.total > 0 ? 'has-val' : ''}" style="height:${hPct}%"></div>
+          </div>
+        `;
+      }
+      chartEl.innerHTML = html;
+
+      // X-axis labels
+      const ticks = [1, 5, 10, 15, 20, 25, daysCount];
+      document.getElementById('dailyChartAxis').innerHTML = ticks.map((t) => `<span>${String(t).padStart(2, '0')}</span>`).join('');
+
+      // Inspect bar text
+      const picked = dayMap[inspectedChartDay] || { total: 0, count: 0 };
+      document.getElementById('chartInspectText').textContent =
+        `Ngày ${String(inspectedChartDay).padStart(2, '0')}: ${formatVNDAlways(picked.total)} (${picked.count} giao dịch)`;
+      document.getElementById('chartJumpBtn').style.display = 'inline-flex';
+    }
+
+    function renderPrevMonthCompare() {
+      const card = document.getElementById('momCompareCard');
+      const prev = appState.prevMonth;
+      if (!prev) {
+        card.style.display = 'none';
+        return;
+      }
+      card.style.display = 'block';
+      const d = appState.dashboard;
+      document.getElementById('momSubtitle').textContent = `Đối chiếu với ${prev.sheetName}`;
+
+      const diff = d.totalSpent - prev.totalSpent;
+      const pct = prev.totalSpent > 0 ? Math.round((diff / prev.totalSpent) * 1000) / 10 : (d.totalSpent > 0 ? 100 : 0);
+      const isUp = diff > 0;
+      const badgeEl = document.getElementById('momDeltaBadge');
+      badgeEl.className = `delta-pill ${isUp ? 'up' : ''}`;
+      badgeEl.innerHTML = `
+        <i data-lucide="${isUp ? 'trending-up' : 'trending-down'}" style="width:13px;height:13px;"></i>
+        ${isUp ? '+' : ''}${pct}%
+      `;
+
+      const metrics = [
+        { label: 'Tổng chi', curr: d.totalSpent, prev: prev.totalSpent },
+        { label: 'Chuyển khoản', curr: d.bankSpent, prev: prev.bankSpent },
+        { label: 'Tiền mặt', curr: d.cashSpent, prev: prev.cashSpent },
+        { label: 'TB / ngày', curr: Math.round(d.avgPerDay), prev: Math.round(prev.avgPerDay) }
+      ];
+      const maxM = Math.max(1, ...metrics.flatMap((m) => [m.curr, m.prev]));
+
+      let rowsHtml = metrics
+        .map((m) => {
+          const cw = m.curr > 0 ? Math.max(4, Math.round((m.curr / maxM) * 100)) : 0;
+          const pw = m.prev > 0 ? Math.max(4, Math.round((m.prev / maxM) * 100)) : 0;
+          return `
+            <div class="mom-row">
+              <span style="font-weight:600;color:var(--ink-2);">${m.label}</span>
+              <div class="mom-bars">
+                <div class="mom-bar curr" style="width:${cw}%"></div>
+                <div class="mom-bar prev" style="width:${pw}%"></div>
+              </div>
+              <div class="tabular" style="text-align:right;font-size:11.5px;line-height:1.3;">
+                <div style="font-weight:700;color:var(--ink);">${formatVNDAlways(m.curr)}</div>
+                <div style="color:var(--ink-3);">${formatVNDAlways(m.prev)}</div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      rowsHtml += `
+        <div style="display:flex;align-items:center;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--ink-2);">
+          <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:6px;border-radius:3px;background:var(--ink);display:inline-block;"></span> Tháng này</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:10px;height:6px;border-radius:3px;background:#D6DAE2;display:inline-block;"></span> ${escapeHtml(prev.sheetName)}</span>
+        </div>
+      `;
+      document.getElementById('momCompareBody').innerHTML = rowsHtml;
+    }
+
+    function renderStats() {
+      if (!appState) return;
+      const d = appState.dashboard;
+      document.getElementById('statTotalSpent').textContent = formatVNDAlways(d.totalSpent);
+      document.getElementById('statMaxExpense').textContent = formatVNDAlways(d.maxExpense);
+      document.getElementById('statAvgDay').textContent = formatVNDAlways(Math.round(d.avgPerDay));
+      document.getElementById('statTxCount').textContent = `${d.txCount}`;
+
+      renderDailyChart();
+      renderPrevMonthCompare();
+
+      const catLimits = (appState.budgets && appState.budgets.categoryLimits) || {};
+      const sortedCats = [...(appState.categories || [])].sort((a, b) => b.amount - a.amount);
+      const maxVal = sortedCats.length ? sortedCats[0].amount : 0;
+
+      document.getElementById('categoryBreakdown').innerHTML = sortedCats
+        .map((c, idx) => {
+          const cap = Number(catLimits[c.name] || 0);
+          const pctShare = Math.round((c.ratio || 0) * 1000) / 10;
+          let barW = maxVal > 0 ? Math.max(4, Math.round((c.amount / maxVal) * 100)) : 0;
+          let fillStyle = idx === 0 && c.amount > 0 ? 'top' : '';
+          let rightLabel = `${formatVNDAlways(c.amount)} <span style="font-weight:500;color:var(--ink-2);font-size:12px;">• ${pctShare}%</span>`;
+
+          if (cap > 0) {
+            const capPct = Math.round((c.amount / cap) * 1000) / 10;
+            barW = Math.min(100, Math.round((c.amount / cap) * 100));
+            if (capPct >= 100) fillStyle = 'danger';
+            else if (capPct >= 80) fillStyle = 'warn';
+            else fillStyle = 'top';
+            rightLabel = `${formatVNDAlways(c.amount)} <span style="font-weight:600;color:${capPct >= 100 ? 'var(--danger)' : capPct >= 80 ? 'var(--warn)' : 'var(--ink-2)'};font-size:12px;">/ ${Math.round(cap / 1000)}k (${capPct}%)</span>`;
+          }
+
+          return `
+            <div class="cat-bar-row">
+              <div class="cat-bar-top">
+                <span class="cat-bar-name">
+                  <i data-lucide="${getCategoryIcon(c.name)}" style="width:15px;height:15px;color:var(--ink-2);"></i>
+                  ${escapeHtml(c.name)}
+                  <span style="font-weight:500;color:var(--ink-3);font-size:12px;">(${c.count})</span>
+                </span>
+                <span class="tabular" style="font-weight:700;">${rightLabel}</span>
+              </div>
+              <div class="cat-bar-track">
+                <div class="cat-bar-fill ${fillStyle === 'top' ? 'top' : ''}" style="width:${c.amount > 0 ? barW : 0}%;${fillStyle === 'danger' ? 'background:var(--danger);' : fillStyle === 'warn' ? 'background:var(--warn);' : ''}"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+      document.getElementById(`view-${tab}`).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+      });
+      refreshIcons();
+    }
+
+    function changeSelectedDay(delta) {
+      const next = selectedDay + delta;
+      if (next < 1 || next > 31) return;
+      selectedDay = next;
+      renderDailyTransactions();
+      refreshIcons();
+    }
+
+    function togglePrivacy() {
+      privacyHidden = !privacyHidden;
+      localStorage.setItem('chi_tieu_privacy', privacyHidden ? '1' : '0');
+      renderAll();
+    }
+
+    function setHistoryFilter(name) {
+      historyCategoryFilter = name;
+      renderHistory();
+    }
+
+    // Modal & Form helpers
+    function renderFormSelectors() {
+      document.getElementById('categoryGrid').innerHTML = CATEGORIES.map(
+        (c) => `
+        <button type="button" class="cat-chip ${formCategory === c.id ? 'selected' : ''}" onclick="selectCategory('${c.id}')">
+          <i data-lucide="${c.icon}" style="width:15px;height:15px;flex-shrink:0;"></i>
+          <span>${c.id}</span>
+        </button>
+      `
+      ).join('');
+
+      document.getElementById('methodGrid').innerHTML = METHODS.map(
+        (m) => `
+        <button type="button" class="method-card ${formMethod === m.id ? 'selected' : ''}" onclick="selectMethod('${m.id}')">
+          <i data-lucide="${m.icon}" style="width:17px;height:17px;flex-shrink:0;"></i>
+          <span>${m.id}</span>
+        </button>
+      `
+      ).join('');
+      refreshIcons();
+    }
+
+    function selectCategory(cat) {
+      formCategory = cat;
+      if (cat === 'Rút tiền') formMethod = 'Rút tiền';
+      else if (cat === 'Nộp tiền') formMethod = 'Nộp tiền';
+      else if (formMethod === 'Rút tiền' || formMethod === 'Nộp tiền') formMethod = 'Chuyển khoản';
+      renderFormSelectors();
+    }
+
+    function selectMethod(method) {
+      formMethod = method;
+      renderFormSelectors();
+    }
+
+    function openTxModal() {
+      editingRow = null;
+      document.getElementById('txModalTitle').textContent = 'Ghi chi tiêu mới';
+      document.getElementById('quickParseWrap').style.display = 'flex';
+      document.getElementById('quickParseInput').value = '';
+      document.getElementById('txAmountDisplay').value = '';
+      document.getElementById('txTitleInput').value = '';
+      document.getElementById('txDayInput').value = selectedDay;
+      document.getElementById('txNoteInput').value = '';
+      document.getElementById('txDeleteBtn').style.display = 'none';
+      formCategory = 'Ăn uống';
+      formMethod = 'Chuyển khoản';
+      renderFormSelectors();
+      openModal('txModal');
+      setTimeout(() => document.getElementById('txAmountDisplay').focus(), 200);
+    }
+
+    function openTxModalWithMethod(method) {
+      openTxModal();
+      formMethod = method;
+      renderFormSelectors();
+    }
+
+    function openEditTx(rowNum) {
+      const tx = (appState.transactions || []).find((t) => t.row === rowNum);
+      if (!tx) return;
+      editingRow = rowNum;
+      document.getElementById('txModalTitle').textContent = `Sửa giao dịch (Hàng ${rowNum})`;
+      document.getElementById('quickParseWrap').style.display = 'none';
+      document.getElementById('txAmountDisplay').value = Number(tx.amount).toLocaleString('vi-VN');
+      document.getElementById('txTitleInput').value = tx.title;
+      document.getElementById('txDayInput').value = tx.day;
+      document.getElementById('txNoteInput').value = tx.note || '';
+      document.getElementById('txDeleteBtn').style.display = 'inline-flex';
+      formCategory = tx.category || 'Ăn uống';
+      formMethod = tx.method || 'Chuyển khoản';
+      renderFormSelectors();
+      openModal('txModal');
+    }
+
+    function parseRawAmount(str) {
+      const digits = String(str || '').replace(/[^\d]/g, '');
+      return digits ? parseInt(digits, 10) : 0;
+    }
+
+    function formatAmountInput(input) {
+      const raw = parseRawAmount(input.value);
+      input.value = raw > 0 ? raw.toLocaleString('vi-VN') : '';
+    }
+
+    function setPresetAmount(val) {
+      document.getElementById('txAmountDisplay').value = val.toLocaleString('vi-VN');
+    }
+
+    function multiplyThousand() {
+      const cur = parseRawAmount(document.getElementById('txAmountDisplay').value);
+      if (cur > 0 && cur < 100000) {
+        setPresetAmount(cur * 1000);
+      } else if (cur === 0) {
+        setPresetAmount(10000);
+      }
+    }
+
+    function handleQuickParse(text) {
+      const s = text.trim();
+      if (!s) return;
+
+      // Nhận diện số tiền kiểu 35k, 120k, 1.5tr, 35000
+      const amtMatch = s.match(/(\d+(?:[.,]\d+)?)\s*(k|ng|tr|m)?\b/i);
+      if (amtMatch) {
+        let num = parseFloat(amtMatch[1].replace(',', '.'));
+        const unit = (amtMatch[2] || '').toLowerCase();
+        if (unit === 'k' || unit === 'ng') num *= 1000;
+        else if (unit === 'tr' || unit === 'm') num *= 1000000;
+        if (!isNaN(num) && num > 0) {
+          setPresetAmount(Math.round(num));
+        }
+      }
+
+      // Nhận diện phương thức nhanh: tm / tiền mặt, ck / chuyển khoản
+      if (/\b(tm|tiền mặt)\b/i.test(s)) formMethod = 'Tiền mặt';
+      else if (/\b(ck|chuyển khoản)\b/i.test(s)) formMethod = 'Chuyển khoản';
+
+      // Tách nội dung
+      let cleanTitle = s
+        .replace(/(\d+(?:[.,]\d+)?)\s*(k|ng|tr|m)?\b/gi, '')
+        .replace(/\b(tm|ck|tiền mặt|chuyển khoản)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (cleanTitle) {
+        cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+        document.getElementById('txTitleInput').value = cleanTitle;
+
+        // Đoán danh mục nhẹ nhàng
+        const low = cleanTitle.toLowerCase();
+        if (/(cơm|bún|phở|mì|bánh|trà|nước|cafe|cà phê|xôi|lẩu|ăn|sữa)/.test(low)) formCategory = 'Ăn uống';
+        else if (/(xăng|gửi xe|grab|be|xe|vé)/.test(low)) formCategory = 'Đi lại';
+        else if (/(thuốc|khám|cắt tóc|gym|ổi|trái cây)/.test(low)) formCategory = 'Sức khỏe';
+        else if (/(điện|nước|trọ|phòng|nhà|wifi)/.test(low)) formCategory = 'Nhà ở';
+        else if (/(phim|game|cầu lông|billiard)/.test(low)) formCategory = 'Giải trí';
+        else if (/(shopee|tiki|mua|áo|quần|sữa tắm|nước giặt)/.test(low)) formCategory = 'Mua sắm';
+      }
+      renderFormSelectors();
+    }
+
+    async function handleSaveTx() {
+      const amount = parseRawAmount(document.getElementById('txAmountDisplay').value);
+      const title = document.getElementById('txTitleInput').value.trim();
+      const day = parseInt(document.getElementById('txDayInput').value, 10);
+      const note = document.getElementById('txNoteInput').value.trim();
+
+      if (!amount || amount <= 0) return showToast('Vui lòng nhập số tiền hợp lệ', true);
+      if (!title) return showToast('Vui lòng nhập nội dung chi tiêu', true);
+      if (!day || day < 1 || day > 31) return showToast('Ngày phải từ 1 đến 31', true);
+
+      const btn = document.getElementById('txSaveBtn');
+      btn.disabled = true;
+      btn.querySelector('span').textContent = 'Đang đồng bộ Sheet...';
+
+      try {
+        const fn = editingRow ? 'updateTransaction' : 'addTransaction';
+        const res = await runServer(fn, {
+          pin: cachedPin,
+          sheetName: activeSheetName,
+          row: editingRow,
+          day,
+          title,
+          category: formCategory,
+          method: formMethod,
+          amount,
+          note
+        });
+        selectedDay = day;
+        inspectedChartDay = day;
+        appState = res;
+        closeModal('txModal');
+        renderAll();
+
+        // Kiểm tra cảnh báo vượt hạn mức ngân sách sau khi lưu
+        const warningMsg = getBudgetWarningAfterSave(res, formCategory);
+        if (warningMsg) {
+          showToast(warningMsg, true);
+        } else if (res.meta && res.meta.expandedRow) {
+          showToast(`Đã tự động thêm hàng ${res.meta.writtenRow} & đồng bộ!`);
+        } else if (res.meta && res.meta.writtenRow) {
+          showToast(`Đã đồng bộ vào hàng ${res.meta.writtenRow}`);
+        } else {
+          showToast('Đã cập nhật Google Sheet');
+        }
+      } catch (e) {
+        showToast(e.message || 'Không thể lưu vào Sheet', true);
+      } finally {
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Lưu & Đồng bộ Sheet';
+      }
+    }
+
+    async function handleDeleteTx() {
+      if (!editingRow) return;
+      if (!confirm('Xóa khoản này khỏi Google Sheet?')) return;
+
+      const btn = document.getElementById('txDeleteBtn');
+      btn.disabled = true;
+      try {
+        const res = await runServer('deleteTransaction', {
+          pin: cachedPin,
+          sheetName: activeSheetName,
+          row: editingRow,
+          selectedDay
+        });
+        appState = res;
+        closeModal('txModal');
+        renderAll();
+        showToast('Đã xóa khỏi Google Sheet');
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function openSheetPicker() {
+      if (!appState) return;
+      document.getElementById('sheetPickerList').innerHTML = (appState.sheets || [])
+        .map(
+          (name) => `
+          <div class="tx-item" onclick="selectMonthSheet('${escapeHtml(name)}')">
+            <div class="tx-icon-box ${name === activeSheetName ? 'income' : ''}">
+              <i data-lucide="${name === activeSheetName ? 'check' : 'file-spreadsheet'}" style="width:18px;height:18px;"></i>
+            </div>
+            <div class="tx-main">
+              <div class="tx-title">${escapeHtml(name)}</div>
+              <div class="tx-meta">${name === activeSheetName ? 'Đang chọn' : 'Nhấn để chuyển sang tháng này'}</div>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+      openModal('sheetPickerModal');
+      refreshIcons();
+    }
+
+    async function selectMonthSheet(name) {
+      activeSheetName = name;
+      closeModal('sheetPickerModal');
+      await refreshData();
+      showToast(`Đã chuyển sang ${name}`);
+    }
+
+    function openNewMonthModal() {
+      const now = new Date();
+      let nextM = now.getMonth() + 2;
+      let nextY = now.getFullYear();
+      if (nextM > 12) {
+        nextM = 1;
+        nextY += 1;
+      }
+      document.getElementById('newMonthInput').value = nextM;
+      document.getElementById('newYearInput').value = nextY;
+      document.getElementById('newMonthCarryOver').checked = appState ? appState.carryOverBalance !== false : true;
+      openModal('newMonthModal');
+    }
+
+    async function handleCreateMonthSheet() {
+      const month = parseInt(document.getElementById('newMonthInput').value, 10);
+      const year = parseInt(document.getElementById('newYearInput').value, 10);
+      const carryOver = document.getElementById('newMonthCarryOver').checked;
+      if (!month || month < 1 || month > 12) return showToast('Tháng phải từ 1 đến 12', true);
+      if (!year || year < 2020) return showToast('Năm không hợp lệ', true);
+
+      const btn = document.getElementById('createMonthBtn');
+      btn.disabled = true;
+      btn.textContent = 'Đang khởi tạo sheet...';
+      try {
+        const res = await runServer('createMonthSheet', {
+          pin: cachedPin,
+          month,
+          year,
+          carryOver
+        });
+        appState = res;
+        activeSheetName = res.activeSheet;
+        selectedDay = 1;
+        closeModal('newMonthModal');
+        renderAll();
+        showToast(res.meta && res.meta.createdSheet ? `Đã tạo tab ${res.meta.createdSheet}` : `Đã chuyển sang ${res.activeSheet}`);
+      } catch (e) {
+        showToast(e.message || 'Không thể tạo tab tháng mới', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Tạo tab tháng mới';
+      }
+    }
+
+    async function toggleAutoCreatePref(key) {
+      if (!appState) return;
+      const nextVal = !(appState[key] !== false);
+      try {
+        const res = await runServer('updateAutoCreateSettings', {
+          pin: cachedPin,
+          [key]: nextVal
+        });
+        appState.autoCreateMonth = res.autoCreateMonth;
+        appState.carryOverBalance = res.carryOverBalance;
+        renderAll();
+        showToast('Đã lưu tùy chọn tháng mới');
+      } catch (e) {
+        showToast(e.message, true);
+      }
+    }
+
+    function getBudgetWarningAfterSave(state, catName) {
+      const b = state.budgets || {};
+      const mLimit = Number(b.monthlyLimit || 0);
+      const spent = Number(state.dashboard.totalSpent || 0);
+      if (mLimit > 0 && spent >= mLimit) {
+        return `Cảnh báo: Đã vượt ngân sách tháng (${Math.round((spent / mLimit) * 100)}%)!`;
+      }
+      const cLimit = Number((b.categoryLimits && b.categoryLimits[catName]) || 0);
+      const catObj = (state.categories || []).find((c) => c.name === catName);
+      if (cLimit > 0 && catObj && catObj.amount >= cLimit) {
+        return `Cảnh báo: "${catName}" đã vượt hạn mức (${Math.round((catObj.amount / cLimit) * 100)}%)!`;
+      }
+      if (mLimit > 0 && spent / mLimit >= 0.8) {
+        return `Lưu ý: Đã dùng ${Math.round((spent / mLimit) * 100)}% ngân sách tháng`;
+      }
+      if (cLimit > 0 && catObj && catObj.amount / cLimit >= 0.8) {
+        return `Lưu ý: "${catName}" đã dùng ${Math.round((catObj.amount / cLimit) * 100)}% hạn mức`;
+      }
+      return '';
+    }
+
+    function openBudgetModal() {
+      const b = (appState && appState.budgets) || { monthlyLimit: 0, categoryLimits: {} };
+      document.getElementById('budgetMonthlyInput').value = b.monthlyLimit > 0 ? Number(b.monthlyLimit).toLocaleString('vi-VN') : '';
+      const catNames = ['Ăn uống', 'Nhà ở', 'Đi lại', 'Mua sắm', 'Giải trí', 'Sức khỏe'];
+      document.getElementById('budgetCategoryInputs').innerHTML = catNames
+        .map((name) => {
+          const val = (b.categoryLimits && b.categoryLimits[name]) || 0;
+          return `
+            <div>
+              <label class="field-label">${escapeHtml(name)}</label>
+              <input data-cat-budget="${escapeHtml(name)}" class="text-input tabular" type="text" inputmode="numeric" placeholder="0" value="${val > 0 ? Number(val).toLocaleString('vi-VN') : ''}" oninput="formatAmountInput(this)" />
+            </div>
+          `;
+        })
+        .join('');
+      openModal('budgetModal');
+    }
+
+    async function handleSaveBudgets() {
+      const monthlyLimit = parseRawAmount(document.getElementById('budgetMonthlyInput').value);
+      const categoryLimits = {};
+      document.querySelectorAll('[data-cat-budget]').forEach((inp) => {
+        categoryLimits[inp.getAttribute('data-cat-budget')] = parseRawAmount(inp.value);
+      });
+
+      const btn = document.getElementById('saveBudgetBtn');
+      btn.disabled = true;
+      try {
+        const res = await runServer('saveBudgets', {
+          pin: cachedPin,
+          sheetName: activeSheetName,
+          selectedDay,
+          monthlyLimit,
+          categoryLimits
+        });
+        appState = res;
+        closeModal('budgetModal');
+        renderAll();
+        showToast('Đã lưu hạn mức ngân sách');
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function openBalanceModal() {
+      if (!appState) return;
+      document.getElementById('initCashInput').value = appState.dashboard.initialCash || 0;
+      document.getElementById('initBankInput').value = appState.dashboard.initialBank || 0;
+      openModal('balanceModal');
+    }
+
+    async function handleSaveInitialBalances() {
+      const initialCash = Number(document.getElementById('initCashInput').value || 0);
+      const initialBank = Number(document.getElementById('initBankInput').value || 0);
+      const btn = document.getElementById('saveInitBalBtn');
+      btn.disabled = true;
+      try {
+        const res = await runServer('updateInitialBalances', {
+          pin: cachedPin,
+          sheetName: activeSheetName,
+          selectedDay,
+          initialCash,
+          initialBank
+        });
+        appState = res;
+        closeModal('balanceModal');
+        renderAll();
+        showToast('Đã cập nhật số dư đầu tháng');
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function openPinSettingsModal() {
+      document.getElementById('currentPinField').style.display = appState && appState.hasPin ? 'block' : 'none';
+      document.getElementById('oldPinInput').value = '';
+      document.getElementById('newPinInput').value = '';
+      openModal('pinModal');
+    }
+
+    async function handleSavePin() {
+      const currentPin = document.getElementById('oldPinInput').value.trim();
+      const newPin = document.getElementById('newPinInput').value.trim();
+      const btn = document.getElementById('savePinBtn');
+      btn.disabled = true;
+      try {
+        const res = await runServer('updatePinSettings', { currentPin, newPin });
+        cachedPin = newPin;
+        if (newPin) sessionStorage.setItem('chi_tieu_pin', newPin);
+        else sessionStorage.removeItem('chi_tieu_pin');
+        closeModal('pinModal');
+        await refreshData();
+        showToast(res.hasPin ? 'Đã bật khóa mã PIN' : 'Đã tắt khóa mã PIN');
+      } catch (e) {
+        showToast(e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function openExternalSheet() {
+      if (appState && appState.spreadsheetUrl) {
+        window.open(appState.spreadsheetUrl, '_blank');
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+      refreshIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function closeBackdrop(e, id) {
+      if (e.target.id === id) closeModal(id);
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function openApiSetupModal() {
+      document.getElementById('gasUrlInput').value = getGasApiUrl();
+      openModal('apiSetupModal');
+    }
+
+    async function handleSaveGasUrl() {
+      const url = document.getElementById('gasUrlInput').value.trim();
+      if (!url || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/i.test(url)) {
+        return showToast('Đường dẫn phải có dạng https://script.google.com/macros/s/.../exec', true);
+      }
+
+      const btn = document.getElementById('saveGasUrlBtn');
+      btn.disabled = true;
+      btn.textContent = 'Đang kiểm tra kết nối...';
+      try {
+        const pingRes = await fetch(url + (url.includes('?') ? '&' : '?') + 'action=ping', {
+          method: 'GET',
+          mode: 'cors',
+          redirect: 'follow'
+        });
+        const pingJson = await pingRes.json();
+        if (!pingJson || !pingJson.ok) {
+          throw new Error('Không nhận được phản hồi API hợp lệ.');
+        }
+        localStorage.setItem(GAS_URL_STORAGE_KEY, url);
+        updateApiStatusLabel();
+        closeModal('apiSetupModal');
+        await refreshData();
+        showToast('Đã kết nối thành công với Google Sheet!');
+      } catch (e) {
+        showToast(e.message || 'Không thể kết nối URL này. Hãy kiểm tra bản triển khai Apps Script!', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Kiểm tra & Lưu kết nối';
+      }
+    }
+
+    function updateApiStatusLabel() {
+      const el = document.getElementById('settingApiStatus');
+      if (!el) return;
+      const cur = getGasApiUrl();
+      el.textContent = cur ? 'Đã kết nối • ' + cur.slice(0, 38) + '...' : 'Chưa cấu hình URL /exec';
+    }
+
+    async function triggerPwaInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        document.getElementById('installPwaRow').style.display = 'none';
+      }
+      deferredInstallPrompt = null;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const row = document.getElementById('installPwaRow');
+      if (row) row.style.display = 'flex';
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
+      updateApiStatusLabel();
+      refreshIcons();
+      refreshData();
+    });
+  </script>
+</body>
+</html>
